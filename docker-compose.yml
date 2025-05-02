@@ -1,0 +1,19 @@
+version: '3.8'
+
+services:
+  frontend:
+    build:
+      context: .
+    container_name: react-frontend
+    ports:
+      - "${REACT_PORT}:${REACT_PORT}"
+    depends_on:
+      - fhir
+    environment:
+      - PORT=${REACT_PORT}
+
+  fhir:
+    image: hapiproject/hapi:latest
+    container_name: fhir-server
+    ports:
+      - "${FHIR_PORT}:${FHIR_PORT}"
