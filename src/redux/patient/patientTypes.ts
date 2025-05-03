@@ -22,13 +22,14 @@ export interface BundleEntry {
 
 export interface Patient {
   resourceType: "Patient";
-  id: string;
+  id?: string;
   name?: HumanName[];
-  gender?: "male" | "female" | "other" | "unknown";
+  // gender?: "male" | "female" | "other" | "unknown";
+  gender?: string;
   birthDate?: string;
   address?: Address[];
   telecom?: ContactPoint[];
-  meta: {
+  meta?: {
     lastUpdated: Date;
   };
   // Add other fields as needed
@@ -59,4 +60,13 @@ export interface ContactPoint {
   value?: string;
   use?: "home" | "work" | "temp" | "old" | "mobile";
   rank?: number;
+}
+
+export interface FhirErrorInterface {
+  resourceType: string;
+  issue: {
+    severity: string;
+    code: string;
+    diagnostics: string;
+  }[];
 }

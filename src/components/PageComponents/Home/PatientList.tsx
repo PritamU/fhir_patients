@@ -1,4 +1,6 @@
+import { Delete, Edit } from "@mui/icons-material";
 import {
+  IconButton,
   Skeleton,
   Stack,
   Table,
@@ -17,6 +19,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { tableColumns } from "../../../assets/constants/tableColumns";
 import {
   setLimit,
+  setModal,
   setPage,
   setSort,
 } from "../../../redux/patient/patientSlice";
@@ -99,17 +102,52 @@ const PatientList = () => {
                   return (
                     <TableRow key={index}>
                       <TableCell>{index + 1}</TableCell>
-                      <TableCell>
-                        {name![0].given![0]} {name![0].family}
-                      </TableCell>
+                      <TableCell>{name![0].text}</TableCell>
                       <TableCell sx={{ textTransform: "capitalize" }}>
                         {gender}
                       </TableCell>
                       <TableCell>{birthDate}</TableCell>
-                      <TableCell>{address?.[0]?.city}</TableCell>
+                      <TableCell>
+                        {address?.[0]?.text}, {address?.[0]?.district},{" "}
+                        {address?.[0]?.state}, {address?.[0]?.postalCode}
+                      </TableCell>
                       <TableCell>{telecom?.[0].value}</TableCell>
                       <TableCell>
-                        {dayjs(meta.lastUpdated).format("YYYY-MM-DD")}
+                        {dayjs(meta!.lastUpdated).format("YYYY-MM-DD")}
+                      </TableCell>
+                      <TableCell>
+                        <Stack flexDirection={"row"} alignItems={"center"}>
+                          <IconButton
+                            size="small"
+                            color="info"
+                            onClick={() =>
+                              dispatch(
+                                setModal({
+                                  type: "edit",
+                                  isOpen: true,
+                                  data: item,
+                                })
+                              )
+                            }
+                          >
+                            <Edit />
+                          </IconButton>
+                          <IconButton
+                            size="small"
+                            color="error"
+                            onClick={() => {
+                              dispatch(
+                                setModal({
+                                  isOpen: true,
+                                  type: "delete",
+                                  data: item,
+                                })
+                              );
+                            }}
+                          >
+                            <Delete />
+                          </IconButton>
+                        </Stack>
                       </TableCell>
                     </TableRow>
                   );

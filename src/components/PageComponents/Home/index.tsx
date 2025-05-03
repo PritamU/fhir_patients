@@ -5,6 +5,7 @@ import { useFetchPatientsQuery } from "../../../redux/patient/patientApi";
 import { setIsLoading, setPatients } from "../../../redux/patient/patientSlice";
 import { RootState } from "../../../redux/store";
 import CreatePatientModal from "./CreatePatientModal";
+import DeletePatientModal from "./DeletePatientModal";
 import Filters from "./Filters";
 import PatientList from "./PatientList";
 
@@ -37,7 +38,12 @@ const HomePage = () => {
     <Stack gap={2}>
       <Filters />
       <PatientList />
-      {modalData.isOpen && <CreatePatientModal />}
+      {modalData.isOpen && modalData.type !== "delete" && (
+        <CreatePatientModal />
+      )}
+      {modalData.isOpen && modalData.type === "delete" && (
+        <DeletePatientModal />
+      )}
     </Stack>
   );
 };

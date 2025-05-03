@@ -34,6 +34,11 @@ const tableColumns = [
     title: "Last Updated",
     showSort: true,
   },
+  {
+    id: "action",
+    title: "Action",
+    showSort: false,
+  },
 ];
 
 export { tableColumns };

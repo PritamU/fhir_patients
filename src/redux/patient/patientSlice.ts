@@ -13,8 +13,13 @@ export interface PatientSliceInterface {
   searchKey: string;
   modalData: {
     isOpen: boolean;
-    type: "edit" | "create";
+    type: "edit" | "create" | "delete";
     data?: BundleEntry;
+  };
+  snackbar: {
+    isOpen: boolean;
+    message: string;
+    severity: "success" | "error" | "warning" | "info";
   };
 }
 
@@ -30,6 +35,11 @@ const initialState: PatientSliceInterface = {
   modalData: {
     isOpen: false,
     type: "create",
+  },
+  snackbar: {
+    isOpen: false,
+    message: "",
+    severity: "info",
   },
 };
 
@@ -68,13 +78,28 @@ export const patientSlice = createSlice({
       state,
       action: PayloadAction<{
         isOpen: boolean;
-        type: "create" | "edit";
+        type: "create" | "edit" | "delete";
         data?: BundleEntry;
       }>
     ) => {
       state.modalData.isOpen = action.payload.isOpen;
       state.modalData.type = action.payload.type;
       state.modalData.data = action.payload.data;
+    },
+    setSnackbar: (
+      state,
+      action: PayloadAction<{
+        isOpen: boolean;
+        message?: string;
+        severity?: "success" | "error" | "warning" | "info";
+      }>
+    ) => {
+      const { isOpen, message, severity } = action.payload;
+      state.snackbar = {
+        isOpen,
+        message: message || "",
+        severity: severity || "info",
+      };
     },
   },
 });
@@ -88,6 +113,7 @@ export const {
   setSearchKey,
   setSort,
   setModal,
+  setSnackbar,
 } = patientSlice.actions;
 
 export default patientSlice.reducer;
