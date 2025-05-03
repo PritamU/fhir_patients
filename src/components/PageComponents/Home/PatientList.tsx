@@ -1,5 +1,6 @@
 import { Delete, Edit } from "@mui/icons-material";
 import {
+  Avatar,
   IconButton,
   Skeleton,
   Stack,
@@ -61,7 +62,9 @@ const PatientList = () => {
                         }
                       }}
                     >
-                      {item.title}
+                      <Typography variant="body2" fontWeight={600}>
+                        {item.title}
+                      </Typography>
                     </TableSortLabel>
                   </TableCell>
                 );
@@ -171,8 +174,23 @@ const PatientList = () => {
         />
       )}
       {count === 0 && !isLoading && (
-        <Stack justifyContent={"center"} alignItems={"center"} height={"60vh"}>
-          <Typography>No Data Found</Typography>
+        <Stack
+          justifyContent={"center"}
+          alignItems={"center"}
+          height={"60vh"}
+          gap={2}
+          textAlign={"center"}
+        >
+          <Avatar
+            src="/not-found.png"
+            alt="Data Not Found"
+            sx={{ height: 100, width: 100 }}
+          />
+          <Typography variant="h5">Oops! No Patients Found!</Typography>
+          <Typography variant="h6" sx={{ color: "text.secondary" }}>
+            Click on 'Add Patient" to add new Patients which will be listed
+            here.{" "}
+          </Typography>
         </Stack>
       )}
     </React.Fragment>

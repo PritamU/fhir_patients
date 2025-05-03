@@ -66,18 +66,20 @@ const DeletePatientModal = () => {
           variant="outlined"
           loading={isLoading}
           onClick={() => handleModalClose()}
+          color="error"
         >
           Close
         </Button>
         <Button
           variant="contained"
+          color="error"
           loading={isLoading}
           onClick={() => {
             const id = modalData.data?.resource!.id as string;
             deletePatient({ id });
           }}
         >
-          {isLoading ? "Loading..." : "Confirm"}
+          {isLoading ? "Loading..." : "Delete"}
         </Button>
       </DialogActions>
     </Dialog>
