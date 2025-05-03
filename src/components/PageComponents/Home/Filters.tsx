@@ -9,10 +9,12 @@ const Filters = () => {
   const dispatch = useDispatch();
 
   const debouncedSearch = useDebounce(localSearchKey, 500);
+  console.log("debouncedSearch", debouncedSearch);
 
   useEffect(() => {
-    setSearchKey(debouncedSearch);
-  }, [debouncedSearch]);
+    console.log("use Effect", debouncedSearch);
+    dispatch(setSearchKey(debouncedSearch));
+  }, [debouncedSearch, dispatch]);
 
   return (
     <Stack

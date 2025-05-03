@@ -17,7 +17,9 @@ export const patientApi = createApi({
       }
     >({
       query: ({ limit, page, searchKey, sortField, sortValue }) =>
-        `?_count=${limit}&_getpagesoffset=${page}&_sort=${sortValue}${sortField}${
+        `?_count=${limit}&_getpagesoffset=${
+          page * limit
+        }&_sort=${sortValue}${sortField}${
           searchKey !== "" ? `&name=${searchKey}` : ""
         }`,
     }),

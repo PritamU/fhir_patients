@@ -19,7 +19,7 @@ export interface PatientSliceInterface {
 }
 
 const initialState: PatientSliceInterface = {
-  page: 1,
+  page: 0,
   limit: 10,
   sortField: "_lastUpdated",
   sortValue: "-",
@@ -41,7 +41,7 @@ export const patientSlice = createSlice({
       state.page = action.payload;
     },
     setLimit: (state, action: PayloadAction<number>) => {
-      state.page = action.payload;
+      state.limit = action.payload;
     },
     setSort: (
       state,
