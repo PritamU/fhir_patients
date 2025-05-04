@@ -13,7 +13,7 @@ The goal sounded straightforward enough:
 
 To give you an introduction, **FHIR (Fast Healthcare Interoperability Resources)** is the international standard for healthcare data. It’s supposed to be the backbone of how modern medical apps talk to each other.
 
-This is a preview of the Patient Manager Dashboard that I am built.
+This is a preview of the Patient Manager Dashboard that I have built.
 
 ![Home Page](./public/screenshots/home.png)  
  _Home Page with the patient list_.
