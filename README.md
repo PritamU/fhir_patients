@@ -280,4 +280,4 @@ This project was more than a technical exercise, It was a crash course in health
 
 If you're diving into FIHR for the first time, this project is a great launchpad, full of unexpected lessons, and gives you a great idea on what its like to work with the FHIR Standard and also the difficulties in implementing it to JavaScript Based Web Frameworks.
 
-Thanks for reading and if you want to try it yourself, [clone the repo](#) and get started!
+Thanks for reading and if you want to try it yourself, clone the repo and get started!
