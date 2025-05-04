@@ -188,7 +188,7 @@ const PatientList = () => {
           />
           <Typography variant="h5">Oops! No Patients Found!</Typography>
           <Typography variant="h6" sx={{ color: "text.secondary" }}>
-            Click on 'Add Patient" to add new Patients which will be listed
+            Click on 'Add Patient" to add New Patients which will be listed
             here.{" "}
           </Typography>
         </Stack>

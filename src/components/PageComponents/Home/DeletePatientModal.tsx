@@ -17,7 +17,7 @@ const DeletePatientModal = () => {
   const { modalData } = useSelector((state: RootState) => state.patient);
   const dispatch = useDispatch();
 
-  const [deletePatient, { isLoading, isError, isSuccess, error }] =
+  const [deletePatient, { isLoading, isError, isSuccess, error, data }] =
     useDeletePatientMutation();
 
   const handleModalClose = () => {
@@ -38,6 +38,19 @@ const DeletePatientModal = () => {
       );
     }
     if (isSuccess) {
+      const { issue } = data;
+      const responseText = issue[0]!.details!.coding[0].code;
+      if (responseText !== "SUCCESSFUL_DELETE") {
+        dispatch(
+          setSnackbar({
+            isOpen: true,
+            severity: "error",
+            message: issue[0]!.diagnostics,
+          })
+        );
+        return;
+      }
+
       dispatch(
         setSnackbar({
           isOpen: true,
@@ -47,7 +60,7 @@ const DeletePatientModal = () => {
       );
       dispatch(setModal({ isOpen: false, type: "create" }));
     }
-  }, [isLoading, isSuccess, isError, error, dispatch]);
+  }, [isLoading, isSuccess, isError, error, data, dispatch]);
 
   return (
     <Dialog open={modalData.isOpen} onClose={handleModalClose} fullWidth>
