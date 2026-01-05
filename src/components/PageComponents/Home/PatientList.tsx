@@ -1,6 +1,7 @@
-import { Delete, Edit } from "@mui/icons-material";
+import { Delete, Edit, NavigateNext, Visibility } from "@mui/icons-material";
 import {
   Avatar,
+  Button,
   IconButton,
   Skeleton,
   Stack,
@@ -25,11 +26,19 @@ import {
   setSort,
 } from "../../../redux/patient/patientSlice";
 import { RootState } from "../../../redux/store";
+import type { Patient } from "fhir/r4";
 
 const PatientList = () => {
-  const { count, sortField, sortValue, isLoading, patients, limit, page } =
+  const { sortField, sortValue, isLoading, patients, limit, page, next } =
     useSelector((state: RootState) => state.patient);
   const dispatch = useDispatch();
+  
+  const handleNextPage = () => {
+    if (next) {
+      dispatch(setPage(page + 1));
+    }
+  };
+
   return (
     <React.Fragment>
       <TableContainer>
@@ -96,30 +105,60 @@ const PatientList = () => {
             </TableBody>
           )}
           <TableBody>
-            {count > 0 && (
+            {patients.length > 0 && (
               <React.Fragment>
                 {patients.map((item, index) => {
                   const { resource } = item;
+                  if (!resource) return null;
                   const { name, gender, birthDate, telecom, address, meta } =
-                    resource;
+                    resource as Patient;
                   return (
                     <TableRow key={index}>
                       <TableCell>{index + 1}</TableCell>
-                      <TableCell>{name![0].text}</TableCell>
+                      <TableCell>
+                        {name?.[0]?.text || name?.[0]?.given?.join(" ") || "N/A"}
+                      </TableCell>
                       <TableCell sx={{ textTransform: "capitalize" }}>
-                        {gender}
+                        {gender || "N/A"}
                       </TableCell>
-                      <TableCell>{birthDate}</TableCell>
                       <TableCell>
-                        {address?.[0]?.text}, {address?.[0]?.district},{" "}
-                        {address?.[0]?.state}, {address?.[0]?.postalCode}
+                        {birthDate ? dayjs(birthDate).format("YYYY-MM-DD") : "N/A"}
                       </TableCell>
-                      <TableCell>{telecom?.[0].value}</TableCell>
                       <TableCell>
-                        {dayjs(meta!.lastUpdated).format("YYYY-MM-DD")}
+                        {address?.[0] ? (
+                          [
+                            address[0].text,
+                            address[0].district,
+                            address[0].state,
+                            address[0].postalCode
+                          ].filter(Boolean).join(", ") || "N/A"
+                        ) : (
+                          "N/A"
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        {telecom?.[0]?.value || "N/A"}
+                      </TableCell>
+                      <TableCell>
+                        {meta?.lastUpdated ? dayjs(meta.lastUpdated).format("YYYY-MM-DD") : "N/A"}
                       </TableCell>
                       <TableCell>
                         <Stack flexDirection={"row"} alignItems={"center"}>
+                          <IconButton
+                            size="small"
+                            color="primary"
+                            onClick={() =>
+                              dispatch(
+                                setModal({
+                                  type: "details",
+                                  isOpen: true,
+                                  data: item,
+                                })
+                              )
+                            }
+                          >
+                            <Visibility />
+                          </IconButton>
                           <IconButton
                             size="small"
                             color="info"
@@ -160,20 +199,32 @@ const PatientList = () => {
           </TableBody>
         </Table>
       </TableContainer>
-      {count !== 0 && (
-        <TablePagination
-          rowsPerPageOptions={[10, 20, 30]}
-          component="div"
-          count={count}
-          rowsPerPage={limit}
-          page={page}
-          onPageChange={(_, newPage) => dispatch(setPage(newPage))}
-          onRowsPerPageChange={(e) => {
-            dispatch(setLimit(Number(e.target.value)));
-          }}
-        />
+      {patients.length !== 0 && (
+        <Stack direction="row" justifyContent="space-between" alignItems="center">
+          <TablePagination
+            rowsPerPageOptions={[10, 20, 30]}
+            component="div"
+            count={-1}
+            rowsPerPage={limit}
+            page={page}
+            onPageChange={(_, newPage) => dispatch(setPage(newPage))}
+            onRowsPerPageChange={(e) => {
+              dispatch(setLimit(Number(e.target.value)));
+            }}
+          />
+          {next && (
+            <Button
+              variant="contained"
+              endIcon={<NavigateNext />}
+              onClick={handleNextPage}
+              disabled={isLoading}
+            >
+              Next Page
+            </Button>
+          )}
+        </Stack>
       )}
-      {count === 0 && !isLoading && (
+      {patients.length === 0 && !isLoading && (
         <Stack
           justifyContent={"center"}
           alignItems={"center"}

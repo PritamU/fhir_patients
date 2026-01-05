@@ -16,33 +16,34 @@ import {
 } from "../../../redux/patient/patientApi";
 import { setModal, setSnackbar } from "../../../redux/patient/patientSlice";
 import { RootState } from "../../../redux/store";
+import type { Patient, OperationOutcome } from "fhir/r4";
 
 import dayjs from "dayjs";
 import { useEffect } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, Resolver, SubmitHandler } from "react-hook-form";
 import * as yup from "yup";
-import {
-  FhirErrorInterface,
-  Patient,
-} from "../../../redux/patient/patientTypes";
 
 const formSchema = yup.object().shape({
   name: yup.string().required("Name is required"),
   gender: yup.string().required("Gender is required"),
   birthDate: yup.string().required("BirthDate is required"),
-  // .date()
-  // .typeError("Invalid BirthDate!"),
-  address: yup.string().required("Address is required"),
-  district: yup.string().required("District is required"),
-  state: yup.string().required("State is required"),
+  address: yup.string().optional(),
+  district: yup.string().optional(),
+  state: yup.string().optional(),
   postalCode: yup
     .string()
-    .required("Pincode is required")
-    .matches(/^[1-9][0-9]{5}$/, "Invalid Pincode"),
+    .optional()
+    .test("is-valid-pincode", "Invalid Pincode", (value) => {
+      if (!value) return true;
+      return /^[1-9][0-9]{5}$/.test(value);
+    }),
   phoneNumber: yup
     .string()
-    .required("Phone Number is required")
-    .matches(/^[6-9]\d{9}$/, "Invalid Phone Number"),
+    .optional()
+    .test("is-valid-phone", "Invalid Phone Number", (value) => {
+      if (!value) return true;
+      return /^[6-9]\d{9}$/.test(value);
+    }),
 });
 
 type FormData = yup.InferType<typeof formSchema>;
@@ -87,7 +88,7 @@ const CreatePatientModal = () => {
       console.log("addPatientError", addPatientError);
       const { data } = addPatientError as {
         status: number;
-        data: FhirErrorInterface;
+        data: OperationOutcome;
       };
       dispatch(
         setSnackbar({
@@ -120,7 +121,7 @@ const CreatePatientModal = () => {
     if (isUpdatePatientError) {
       const { data } = updatePatientError as {
         status: number;
-        data: FhirErrorInterface;
+        data: OperationOutcome;
       };
       dispatch(
         setSnackbar({
@@ -155,22 +156,21 @@ const CreatePatientModal = () => {
 
     formState: { errors },
   } = useForm<FormData>({
-    resolver: yupResolver(formSchema),
+    resolver: yupResolver(formSchema) as Resolver<FormData>,
     defaultValues: {
-      name: type === "edit" ? `${data?.resource.name![0].text}` : "",
-      gender: type === "edit" ? `${data?.resource.gender}` : "",
-      birthDate: type === "edit" ? `${data?.resource.birthDate}` : undefined,
-      address: type === "edit" ? `${data?.resource.address![0].text}` : "",
-      district: type === "edit" ? `${data?.resource.address![0].district}` : "",
-      state: type === "edit" ? `${data?.resource.address![0].state}` : "",
+      name: type === "edit" && data?.resource ? `${(data.resource as Patient).name?.[0]?.text || ""}` : "",
+      gender: type === "edit" && data?.resource ? `${(data.resource as Patient).gender || ""}` : "",
+      birthDate: type === "edit" && data?.resource ? `${(data.resource as Patient).birthDate || ""}` : "",
+      address: type === "edit" && data?.resource ? `${(data.resource as Patient).address?.[0]?.text || ""}` : "",
+      district: type === "edit" && data?.resource ? `${(data.resource as Patient).address?.[0]?.district || ""}` : "",
+      state: type === "edit" && data?.resource ? `${(data.resource as Patient).address?.[0]?.state || ""}` : "",
       postalCode:
-        type === "edit" ? `${data?.resource.address![0].postalCode}` : "",
-      phoneNumber: type === "edit" ? `${data?.resource.telecom![0].value}` : "",
+        type === "edit" && data?.resource ? `${(data.resource as Patient).address?.[0]?.postalCode || ""}` : "",
+      phoneNumber: type === "edit" && data?.resource ? `${(data.resource as Patient).telecom?.[0]?.value || ""}` : "",
     },
   });
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const handleConfirm = (data: any) => {
+  const handleConfirm: SubmitHandler<FormData> = (formData) => {
     const {
       address,
       birthDate,
@@ -180,7 +180,8 @@ const CreatePatientModal = () => {
       phoneNumber,
       postalCode,
       state,
-    } = data as FormData;
+    } = formData;
+    
     const payload: Patient = {
       resourceType: "Patient",
       name: [
@@ -189,28 +190,39 @@ const CreatePatientModal = () => {
           text: name,
         },
       ],
-      gender: gender,
+      gender: gender as "male" | "female" | "other" | "unknown",
       birthDate: dayjs(birthDate).format("YYYY-MM-DD"),
-      address: [
+    };
+    // Conditionally include address if any related field is provided
+    const hasAnyAddressField =
+      Boolean(address && address.trim().length > 0) ||
+      Boolean(district && district.trim().length > 0) ||
+      Boolean(state && state.trim().length > 0) ||
+      Boolean(postalCode && postalCode.trim().length > 0);
+    if (hasAnyAddressField) {
+      payload.address = [
         {
-          text: address,
-          district,
-          state,
-          postalCode,
+          ...(address ? { text: address } : {}),
+          ...(district ? { district } : {}),
+          ...(state ? { state } : {}),
+          ...(postalCode ? { postalCode } : {}),
         },
-      ],
-      telecom: [
+      ];
+    }
+    // Conditionally include telecom if phone number is provided
+    if (phoneNumber && phoneNumber.trim().length > 0) {
+      payload.telecom = [
         {
           system: "phone",
           value: phoneNumber,
         },
-      ],
-    };
+      ];
+    }
+    
     if (type === "create") {
       addPatient(payload);
-    } else if (type === "edit") {
-      const modifiedPayload = { ...payload, id: modalData.data!.resource.id! };
-
+    } else if (type === "edit" && modalData.data?.resource) {
+      const modifiedPayload = { ...payload, id: (modalData.data.resource as Patient).id! };
       updatePatient(modifiedPayload);
     }
   };
@@ -245,7 +257,7 @@ const CreatePatientModal = () => {
             helperText={errors.gender?.message}
             slotProps={{ inputLabel: { shrink: true } }}
             defaultValue={
-              type === "edit" ? `${data?.resource.gender}` : "string"
+              type === "edit" && data?.resource ? `${(data.resource as Patient).gender || ""}` : ""
             }
           >
             <MenuItem value="male">Male</MenuItem>

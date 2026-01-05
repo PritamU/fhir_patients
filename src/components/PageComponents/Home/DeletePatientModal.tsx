@@ -10,8 +10,9 @@ import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useDeletePatientMutation } from "../../../redux/patient/patientApi";
 import { setModal, setSnackbar } from "../../../redux/patient/patientSlice";
-import { FhirErrorInterface } from "../../../redux/patient/patientTypes";
 import { RootState } from "../../../redux/store";
+import type { Patient } from "fhir/r4";
+import type { FhirErrorResponse } from "../../../redux/patient/patientTypes";
 
 const DeletePatientModal = () => {
   const { modalData } = useSelector((state: RootState) => state.patient);
@@ -22,45 +23,37 @@ const DeletePatientModal = () => {
 
   const handleModalClose = () => {
     if (!isLoading) {
-      dispatch(setModal({ isOpen: false, type: "create" }));
+      dispatch(setModal({ isOpen: false, type: "delete" }));
     }
   };
 
   useEffect(() => {
     if (isError) {
-      const { data } = error as { status: number; data: FhirErrorInterface };
+      const { data } = error as { status: number; data: FhirErrorResponse };
       dispatch(
         setSnackbar({
           isOpen: true,
           severity: "error",
-          message: data.issue[0].diagnostics,
+          message: data?.issue?.[0]?.diagnostics || "An error occurred while deleting the patient",
         })
       );
     }
     if (isSuccess) {
-      const { issue } = data;
-      const responseText = issue[0]!.details!.coding[0].code;
-      if (responseText !== "SUCCESSFUL_DELETE") {
-        dispatch(
-          setSnackbar({
-            isOpen: true,
-            severity: "error",
-            message: issue[0]!.diagnostics,
-          })
-        );
-        return;
-      }
-
       dispatch(
         setSnackbar({
           isOpen: true,
           severity: "success",
-          message: "Patient Deleted",
+          message: "Patient Deleted Successfully",
         })
       );
-      dispatch(setModal({ isOpen: false, type: "create" }));
+      // Close the modal
+      dispatch(setModal({ isOpen: false, type: "delete" }));
     }
   }, [isLoading, isSuccess, isError, error, data, dispatch]);
+
+  // Safely access patient data with proper typing
+  const patient = modalData.data?.resource as Patient | undefined;
+  const patientName = patient?.name?.[0]?.text || patient?.name?.[0]?.given?.join(" ") || "Unknown Patient";
 
   return (
     <Dialog open={modalData.isOpen} onClose={handleModalClose} fullWidth>
@@ -70,14 +63,14 @@ const DeletePatientModal = () => {
           Are you sure you want to delete this patient named{" "}
           <span style={{ fontWeight: "bold" }}>
             {" "}
-            {modalData.data?.resource.name![0].text}
+            {patientName}
           </span>
         </DialogContentText>
       </DialogContent>
       <DialogActions>
         <Button
           variant="outlined"
-          loading={isLoading}
+          disabled={isLoading}
           onClick={() => handleModalClose()}
           color="error"
         >
@@ -86,10 +79,12 @@ const DeletePatientModal = () => {
         <Button
           variant="contained"
           color="error"
-          loading={isLoading}
+          disabled={isLoading}
           onClick={() => {
-            const id = modalData.data?.resource!.id as string;
-            deletePatient({ id });
+            const id = patient?.id;
+            if (id) {
+              deletePatient({ id });
+            }
           }}
         >
           {isLoading ? "Loading..." : "Delete"}

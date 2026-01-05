@@ -8,6 +8,7 @@ import CreatePatientModal from "./CreatePatientModal";
 import DeletePatientModal from "./DeletePatientModal";
 import Filters from "./Filters";
 import PatientList from "./PatientList";
+import PatientDetailsModal from "./PatientDetailsModal";
 
 const HomePage = () => {
   const { modalData, searchKey, page, limit, sortField, sortValue } =
@@ -27,10 +28,17 @@ const HomePage = () => {
       dispatch(setIsLoading(true));
     }
     if (isError) {
-      dispatch(setPatients({ count: 0, patients: [] }));
+      dispatch(setPatients({ patients: [], next: null }));
     }
-    if (isSuccess) {
-      dispatch(setPatients({ count: data.total!, patients: data.entry || [] }));
+    if (isSuccess && data) {
+      // Extract next URL from FHIR bundle link
+      const nextLink = data.link?.find(link => link.relation === 'next');
+      const nextUrl = nextLink?.url || null;
+      
+      dispatch(setPatients({ 
+        patients: data.entry || [],
+        next: nextUrl
+      }));
     }
   }, [isLoading, isSuccess, isError, data, dispatch]);
 
@@ -38,11 +46,17 @@ const HomePage = () => {
     <Stack gap={2}>
       <Filters />
       <PatientList />
-      {modalData.isOpen && modalData.type !== "delete" && (
+      {modalData.isOpen && modalData.type === "create" && (
+        <CreatePatientModal />
+      )}
+      {modalData.isOpen && modalData.type === "edit" && (
         <CreatePatientModal />
       )}
       {modalData.isOpen && modalData.type === "delete" && (
         <DeletePatientModal />
+      )}
+      {modalData.isOpen && modalData.type === "details" && (
+        <PatientDetailsModal />
       )}
     </Stack>
   );

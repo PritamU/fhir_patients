@@ -35,7 +35,7 @@ const tableColumns = [
     showSort: true,
   },
   {
-    id: "action",
+    id: "actions",
     title: "Actions",
     showSort: false,
   },

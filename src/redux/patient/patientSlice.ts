@@ -1,19 +1,19 @@
 import type { PayloadAction } from "@reduxjs/toolkit";
 import { createSlice } from "@reduxjs/toolkit";
-import { BundleEntry } from "./patientTypes";
+import type { BundleEntry } from "fhir/r4";
 
 export interface PatientSliceInterface {
   patients: BundleEntry[];
-  count: number;
   page: number;
   limit: number;
   sortField: string;
   sortValue: "-" | "";
   isLoading: boolean;
   searchKey: string;
+  next: string | null;
   modalData: {
     isOpen: boolean;
-    type: "edit" | "create" | "delete";
+    type: "edit" | "create" | "delete" | "details";
     data?: BundleEntry;
   };
   snackbar: {
@@ -31,7 +31,7 @@ const initialState: PatientSliceInterface = {
   searchKey: "",
   isLoading: true,
   patients: [],
-  count: 0,
+  next: null,
   modalData: {
     isOpen: false,
     type: "create",
@@ -68,17 +68,17 @@ export const patientSlice = createSlice({
     },
     setPatients: (
       state,
-      action: PayloadAction<{ patients: BundleEntry[]; count: number }>
+      action: PayloadAction<{ patients: BundleEntry[]; next?: string | null }>
     ) => {
       state.patients = action.payload.patients;
-      state.count = action.payload.count;
+      state.next = action.payload.next || null;
       state.isLoading = false;
     },
     setModal: (
       state,
       action: PayloadAction<{
         isOpen: boolean;
-        type: "create" | "edit" | "delete";
+        type: "create" | "edit" | "delete" | "details";
         data?: BundleEntry;
       }>
     ) => {
